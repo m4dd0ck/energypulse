@@ -1,15 +1,12 @@
 # EnergyPulse
 
-End-to-end data pipeline demonstrating the full analytics lifecycle: **Ingestion → Quality → Metrics → Visualization**.
+Weather + energy demand pipeline. Fetches weather data, simulates energy demand, runs quality checks, computes metrics, displays in a dashboard.
 
-## What This Project Demonstrates
-
-This is a portfolio project showcasing how to build a complete, production-style data pipeline. It combines patterns from:
-
-- **Data Ingestion**: Real-time weather API integration
-- **Data Quality**: Automated quality checks (completeness, freshness, range validation)
-- **Semantic Metrics**: Business metrics layer with temperature correlation analysis
-- **Interactive Dashboard**: Streamlit visualization with Plotly charts
+```
+Weather API → Quality Checks → Metrics → Streamlit Dashboard
+                    ↓
+                 DuckDB
+```
 
 ## Architecture
 
@@ -154,7 +151,7 @@ uv run streamlit run src/energypulse/dashboard/app.py
 - **Pydantic 2** for data validation
 - **DuckDB** for local analytics storage
 - **httpx** for async-capable HTTP
-- **Typer + Rich** for beautiful CLI
+- **Typer + Rich** for CLI
 - **Streamlit + Plotly** for dashboard
 - **structlog** for structured logging
 - **pytest** for testing
