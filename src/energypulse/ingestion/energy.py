@@ -109,4 +109,4 @@ class EnergySimulator:
         noise = self._rng.gauss(1.0, 0.05)
         demand *= noise
 
-        return max(0, demand)  # Demand can't be negative
+        return float(max(0, demand))  # Demand can't be negative

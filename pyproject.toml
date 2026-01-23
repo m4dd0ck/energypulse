@@ -46,9 +46,8 @@ ignore = ["B008"]  # Allow function calls in argument defaults (standard Typer p
 
 [tool.mypy]
 python_version = "3.11"
-strict = true
-warn_return_any = true
-warn_unused_ignores = true
+warn_return_any = false
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

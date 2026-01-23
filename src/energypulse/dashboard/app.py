@@ -47,7 +47,7 @@ def main() -> None:
     st.sidebar.header("Filters")
     locations = storage.execute_query("SELECT DISTINCT location FROM energy ORDER BY location")
     location_list = [row[0] for row in locations] if locations else ["new_york"]
-    selected_location = st.sidebar.selectbox("Location", location_list)
+    selected_location = str(st.sidebar.selectbox("Location", location_list))
 
     # Load data
     weather_df = load_weather_data(storage, selected_location)
