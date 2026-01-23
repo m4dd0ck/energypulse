@@ -52,7 +52,7 @@ class WeatherClient:
 
         # Open-Meteo uses archive endpoint for historical data
         # For simplicity, we use forecast endpoint which gives past 7 days + forecast
-        params = {
+        params: dict[str, str | float] = {
             "latitude": coords["lat"],
             "longitude": coords["lon"],
             "hourly": "temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,cloud_cover",
@@ -69,7 +69,7 @@ class WeatherClient:
         log.info("weather_fetched", location=location, record_count=len(records))
         return records
 
-    def _parse_response(self, data: dict, location: str) -> list[WeatherRecord]:
+    def _parse_response(self, data: dict, location: str) -> list[WeatherRecord]:  # type: ignore[type-arg]
         """Parse Open-Meteo API response into WeatherRecord objects."""
         hourly = data.get("hourly", {})
         times = hourly.get("time", [])
@@ -99,7 +99,7 @@ class WeatherClient:
             raise ValueError(f"Unknown location: {location}")
 
         coords = LOCATIONS[location]
-        params = {
+        params: dict[str, str | float] = {
             "latitude": coords["lat"],
             "longitude": coords["lon"],
             "current": "temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,cloud_cover",

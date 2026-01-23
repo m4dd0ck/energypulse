@@ -228,7 +228,7 @@ class Storage:
             for row in result
         ]
 
-    def get_latest_metrics(self, limit: int = 50) -> list[dict]:
+    def get_latest_metrics(self, limit: int = 50) -> list[dict[str, object]]:
         """Get most recent computed metrics."""
         result = self._con.execute(
             """
@@ -250,7 +250,7 @@ class Storage:
             for row in result
         ]
 
-    def get_quality_summary(self) -> dict:
+    def get_quality_summary(self) -> dict[str, int]:
         """Get summary of recent quality check results."""
         result = self._con.execute("""
             WITH recent AS (
@@ -265,7 +265,7 @@ class Storage:
 
         return {row[0]: row[1] for row in result}
 
-    def execute_query(self, query: str) -> list[tuple]:
+    def execute_query(self, query: str) -> list[tuple[object, ...]]:
         """Execute arbitrary SQL query (for dashboard)."""
         return self._con.execute(query).fetchall()
 
