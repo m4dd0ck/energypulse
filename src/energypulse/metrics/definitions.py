@@ -1,12 +1,4 @@
-"""Semantic metrics definitions for energy analytics.
-
-Defines business metrics that can be computed from raw data:
-- Total demand (sum of hourly demand)
-- Peak demand (maximum hourly demand)
-- Average demand (mean hourly demand)
-- Temperature correlation (demand vs temperature)
-- Peak hour ratio (peak demand vs average)
-"""
+"""Semantic metrics for energy analytics."""
 
 from collections.abc import Sequence
 
@@ -60,7 +52,6 @@ class MetricsEngine:
     def total_demand(
         self, records: Sequence[EnergyRecord], dims: dict[str, str]
     ) -> MetricResult:
-        """Sum of all hourly demand values."""
         total = sum(r.demand_mwh for r in records)
         return MetricResult(
             metric_name="total_demand",
@@ -72,7 +63,6 @@ class MetricsEngine:
     def peak_demand(
         self, records: Sequence[EnergyRecord], dims: dict[str, str]
     ) -> MetricResult:
-        """Maximum hourly demand."""
         if not records:
             return MetricResult(
                 metric_name="peak_demand", value=0, unit="MWh", dimensions=dims
@@ -88,7 +78,6 @@ class MetricsEngine:
     def average_demand(
         self, records: Sequence[EnergyRecord], dims: dict[str, str]
     ) -> MetricResult:
-        """Mean hourly demand."""
         if not records:
             return MetricResult(
                 metric_name="average_demand", value=0, unit="MWh", dimensions=dims

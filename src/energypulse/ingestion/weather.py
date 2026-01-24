@@ -26,7 +26,7 @@ class WeatherClient:
     """Client for fetching weather data from Open-Meteo API."""
 
     def __init__(self, timeout: float = 30.0) -> None:
-        self._client = httpx.Client(timeout=timeout)
+        self._client = httpx.Client(timeout=timeout)  # 30s is generous but the API can be slow
 
     def fetch_historical(
         self,
@@ -124,7 +124,6 @@ class WeatherClient:
         )
 
     def close(self) -> None:
-        """Close the HTTP client."""
         self._client.close()
 
     def __enter__(self) -> "WeatherClient":

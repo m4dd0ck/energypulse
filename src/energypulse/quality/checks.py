@@ -1,11 +1,4 @@
-"""Data quality checks for weather and energy data.
-
-Implements common quality patterns:
-- Completeness: Are required fields present?
-- Freshness: Is data recent enough?
-- Range: Are values within expected bounds?
-- Uniqueness: No duplicate records?
-"""
+"""Data quality checks for weather and energy data."""
 
 from collections.abc import Sequence
 from datetime import datetime, timedelta
@@ -57,7 +50,6 @@ class QualityChecker:
     def _check_completeness(
         self, records: Sequence[WeatherRecord | EnergyRecord], data_type: str
     ) -> QualityCheckResult:
-        """Check that we have a minimum number of records."""
         count = len(records)
         threshold = 24  # At least 24 hours of data
 
@@ -82,7 +74,6 @@ class QualityChecker:
     def _check_freshness(
         self, records: Sequence[WeatherRecord], max_age_hours: int
     ) -> QualityCheckResult:
-        """Check that most recent record is within acceptable age."""
         if not records:
             return QualityCheckResult(
                 check_name="weather_freshness",
@@ -115,7 +106,6 @@ class QualityChecker:
     def _check_temperature_range(
         self, records: Sequence[WeatherRecord]
     ) -> QualityCheckResult:
-        """Check temperatures are within realistic range."""
         if not records:
             return QualityCheckResult(
                 check_name="temperature_range",
@@ -148,7 +138,6 @@ class QualityChecker:
     def _check_uniqueness(
         self, records: Sequence[WeatherRecord | EnergyRecord]
     ) -> QualityCheckResult:
-        """Check for duplicate timestamps per location."""
         if not records:
             return QualityCheckResult(
                 check_name="uniqueness",
@@ -181,7 +170,6 @@ class QualityChecker:
         )
 
     def _check_no_gaps(self, records: Sequence[WeatherRecord]) -> QualityCheckResult:
-        """Check for missing hours in time series."""
         if len(records) < 2:
             return QualityCheckResult(
                 check_name="no_gaps",
@@ -221,7 +209,6 @@ class QualityChecker:
         )
 
     def _check_demand_range(self, records: Sequence[EnergyRecord]) -> QualityCheckResult:
-        """Check energy demand is within realistic range."""
         if not records:
             return QualityCheckResult(
                 check_name="demand_range",
@@ -252,7 +239,6 @@ class QualityChecker:
         )
 
     def _check_demand_consistency(self, records: Sequence[EnergyRecord]) -> QualityCheckResult:
-        """Check demand doesn't have unrealistic hour-to-hour swings."""
         if len(records) < 2:
             return QualityCheckResult(
                 check_name="demand_consistency",
