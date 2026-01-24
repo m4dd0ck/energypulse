@@ -28,7 +28,6 @@ class Storage:
         self._init_schema()
 
     def _init_schema(self) -> None:
-        """Create tables if they don't exist."""
         self._con.execute("""
             CREATE TABLE IF NOT EXISTS weather (
                 timestamp TIMESTAMP,
@@ -90,7 +89,6 @@ class Storage:
         log.info("schema_initialized", db_path=str(self._db_path))
 
     def save_weather(self, records: Sequence[WeatherRecord]) -> int:
-        """Save weather records (upsert on timestamp+location)."""
         if not records:
             return 0
 
@@ -119,7 +117,6 @@ class Storage:
         return len(records)
 
     def save_energy(self, records: Sequence[EnergyRecord]) -> int:
-        """Save energy records (upsert on timestamp+location)."""
         if not records:
             return 0
 
@@ -145,7 +142,6 @@ class Storage:
         return len(records)
 
     def save_quality_results(self, results: Sequence[QualityCheckResult]) -> int:
-        """Save quality check results."""
         if not results:
             return 0
 
@@ -162,7 +158,6 @@ class Storage:
         return len(results)
 
     def save_metrics(self, results: Sequence[MetricResult]) -> int:
-        """Save computed metrics."""
         if not results:
             return 0
 
@@ -182,7 +177,6 @@ class Storage:
     def get_weather(
         self, location: str | None = None, limit: int = 1000
     ) -> list[WeatherRecord]:
-        """Retrieve weather records."""
         query = "SELECT * FROM weather"
         params = []
         if location:
@@ -207,7 +201,6 @@ class Storage:
     def get_energy(
         self, location: str | None = None, limit: int = 1000
     ) -> list[EnergyRecord]:
-        """Retrieve energy records."""
         query = "SELECT * FROM energy"
         params = []
         if location:
@@ -229,7 +222,6 @@ class Storage:
         ]
 
     def get_latest_metrics(self, limit: int = 50) -> list[dict[str, object]]:
-        """Get most recent computed metrics."""
         result = self._con.execute(
             """
             SELECT metric_name, value, unit, dimensions, computed_at
@@ -251,7 +243,6 @@ class Storage:
         ]
 
     def get_quality_summary(self) -> dict[str, int]:
-        """Get summary of recent quality check results."""
         result = self._con.execute("""
             WITH recent AS (
                 SELECT *, ROW_NUMBER() OVER (PARTITION BY check_name ORDER BY checked_at DESC) as rn
@@ -266,11 +257,9 @@ class Storage:
         return {row[0]: row[1] for row in result}
 
     def execute_query(self, query: str) -> list[tuple[object, ...]]:
-        """Execute arbitrary SQL query (for dashboard)."""
         return self._con.execute(query).fetchall()
 
     def close(self) -> None:
-        """Close database connection."""
         self._con.close()
 
     def __enter__(self) -> "Storage":

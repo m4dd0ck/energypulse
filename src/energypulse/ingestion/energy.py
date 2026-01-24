@@ -1,10 +1,4 @@
-"""Energy demand simulation based on weather data.
-
-Simulates realistic energy demand patterns correlated with:
-- Temperature (heating/cooling load)
-- Time of day (peak hours)
-- Day of week (weekend vs weekday)
-"""
+"""Energy demand simulation based on weather data."""
 
 import random
 
@@ -32,7 +26,6 @@ class EnergySimulator:
     """Simulates energy demand based on weather conditions."""
 
     def __init__(self, seed: int | None = None) -> None:
-        """Initialize simulator with optional random seed for reproducibility."""
         self._rng = random.Random(seed)
 
     def simulate_from_weather(self, weather_records: list[WeatherRecord]) -> list[EnergyRecord]:
