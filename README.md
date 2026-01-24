@@ -2,6 +2,9 @@
 
 Weather + energy demand pipeline. Fetches weather data, simulates energy demand, runs quality checks, computes metrics, displays in a dashboard.
 
+![EnergyPulse Dashboard](assets/dashboard1.png)
+![EnergyPulse Dashboard](assets/dashboard2.png)
+
 ```
 Weather API → Quality Checks → Metrics → Streamlit Dashboard
                     ↓
