@@ -1,6 +1,6 @@
 """Weather data ingestion from Open-Meteo API (free, no key required)."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import httpx
 import structlog
@@ -10,7 +10,10 @@ from energypulse.models import WeatherRecord
 log = structlog.get_logger()
 
 # Open-Meteo API - free, no API key needed
-OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
+# Forecast endpoint: recent data (~7 days back) + forecast
+OPEN_METEO_FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
+# Archive endpoint: historical data going back years (free, no key needed)
+OPEN_METEO_ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 
 # Major US cities for demo
 LOCATIONS = {
@@ -36,6 +39,9 @@ class WeatherClient:
     ) -> list[WeatherRecord]:
         """Fetch historical weather data for a location.
 
+        Uses archive API for dates older than 7 days, forecast API for recent data.
+        For long date ranges, fetches in chunks to avoid API timeouts.
+
         Args:
             location: City name (must be in LOCATIONS)
             start_date: Start of date range
@@ -50,8 +56,31 @@ class WeatherClient:
         coords = LOCATIONS[location]
         log.info("fetching_weather", location=location, start=start_date.date(), end=end_date.date())
 
-        # Open-Meteo uses archive endpoint for historical data
-        # For simplicity, we use forecast endpoint which gives past 7 days + forecast
+        # Determine which endpoint to use based on how far back we're going
+        days_back = (datetime.now() - start_date).days
+        use_archive = days_back > 7
+
+        if use_archive:
+            # Archive API works best in chunks of ~30 days for large ranges
+            records = self._fetch_in_chunks(coords, location, start_date, end_date)
+        else:
+            # Forecast endpoint for recent data
+            records = self._fetch_single(
+                OPEN_METEO_FORECAST_URL, coords, location, start_date, end_date
+            )
+
+        log.info("weather_fetched", location=location, record_count=len(records))
+        return records
+
+    def _fetch_single(
+        self,
+        url: str,
+        coords: dict[str, float],
+        location: str,
+        start_date: datetime,
+        end_date: datetime,
+    ) -> list[WeatherRecord]:
+        """Fetch weather data from a single API call."""
         params: dict[str, str | float] = {
             "latitude": coords["lat"],
             "longitude": coords["lon"],
@@ -61,13 +90,40 @@ class WeatherClient:
             "timezone": "America/New_York",
         }
 
-        response = self._client.get(OPEN_METEO_URL, params=params)
+        response = self._client.get(url, params=params)
         response.raise_for_status()
         data = response.json()
 
-        records = self._parse_response(data, location)
-        log.info("weather_fetched", location=location, record_count=len(records))
-        return records
+        return self._parse_response(data, location)
+
+    def _fetch_in_chunks(
+        self,
+        coords: dict[str, float],
+        location: str,
+        start_date: datetime,
+        end_date: datetime,
+        chunk_days: int = 30,
+    ) -> list[WeatherRecord]:
+        """Fetch historical data in chunks to handle long date ranges."""
+        all_records: list[WeatherRecord] = []
+        current_start = start_date
+
+        while current_start < end_date:
+            current_end = min(current_start + timedelta(days=chunk_days), end_date)
+            log.info(
+                "fetching_chunk",
+                location=location,
+                chunk_start=current_start.date(),
+                chunk_end=current_end.date(),
+            )
+
+            records = self._fetch_single(
+                OPEN_METEO_ARCHIVE_URL, coords, location, current_start, current_end
+            )
+            all_records.extend(records)
+            current_start = current_end + timedelta(days=1)
+
+        return all_records
 
     def _parse_response(self, data: dict, location: str) -> list[WeatherRecord]:  # type: ignore[type-arg]
         """Parse Open-Meteo API response into WeatherRecord objects."""
@@ -105,7 +161,7 @@ class WeatherClient:
             "current": "temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,cloud_cover",
         }
 
-        response = self._client.get(OPEN_METEO_URL, params=params)
+        response = self._client.get(OPEN_METEO_FORECAST_URL, params=params)
         response.raise_for_status()
         data = response.json()
 
