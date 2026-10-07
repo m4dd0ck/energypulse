@@ -73,7 +73,7 @@ class TestWeatherQualityChecks:
 
     def test_uniqueness_pass(self, checker: QualityChecker, sample_weather: list[WeatherRecord]) -> None:
         results = checker.check_weather(sample_weather)
-        uniqueness = next(r for r in results if r.check_name == "uniqueness")
+        uniqueness = next(r for r in results if r.check_name == "weather_uniqueness")
         assert uniqueness.status == QualityStatus.PASS
 
     def test_uniqueness_detects_duplicates(self, checker: QualityChecker) -> None:
@@ -91,7 +91,7 @@ class TestWeatherQualityChecks:
             for _ in range(30)
         ]
         results = checker.check_weather(duplicates)
-        uniqueness = next(r for r in results if r.check_name == "uniqueness")
+        uniqueness = next(r for r in results if r.check_name == "weather_uniqueness")
         assert uniqueness.status == QualityStatus.FAIL
         assert uniqueness.metric_value == 29  # 29 duplicates
 
@@ -111,3 +111,36 @@ class TestEnergyQualityChecks:
         results = checker.check_energy(sample_energy)
         consistency = next(r for r in results if r.check_name == "demand_consistency")
         assert consistency.status == QualityStatus.PASS
+
+    def test_energy_uniqueness_detects_duplicates(self, checker: QualityChecker) -> None:
+        ts = datetime.now()
+        duplicates = [
+            EnergyRecord(
+                timestamp=ts,
+                demand_mwh=5000.0,
+                temperature_c=20.0,
+                is_weekend=False,
+                hour_of_day=ts.hour,
+                location="test",
+            )
+            for _ in range(30)
+        ]
+        results = checker.check_energy(duplicates)
+        uniqueness = next(r for r in results if r.check_name == "energy_uniqueness")
+        assert uniqueness.status == QualityStatus.FAIL
+        assert uniqueness.metric_value == 29
+
+
+class TestCheckNames:
+    def test_all_check_names_are_distinct(
+        self,
+        checker: QualityChecker,
+        sample_weather: list[WeatherRecord],
+        sample_energy: list[EnergyRecord],
+    ) -> None:
+        # Storage and the dashboard key "latest result" by check_name, so two
+        # checks sharing a name would silently overwrite each other.
+        results = checker.check_weather(sample_weather) + checker.check_energy(sample_energy)
+        names = [r.check_name for r in results]
+        assert len(names) == 9
+        assert len(set(names)) == len(names)
