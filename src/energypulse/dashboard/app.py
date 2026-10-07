@@ -103,14 +103,14 @@ def main() -> None:
 
 def load_weather_data(storage: Storage, location: str) -> pd.DataFrame:
     """Load weather data into DataFrame."""
-    query = f"""
+    query = """
         SELECT timestamp, temperature_c, humidity_pct, wind_speed_kmh,
                precipitation_mm, cloud_cover_pct, location
         FROM weather
-        WHERE location = '{location}'
+        WHERE location = ?
         ORDER BY timestamp
     """
-    result = storage.execute_query(query)
+    result = storage.execute_query(query, [location])
     if not result:
         return pd.DataFrame()
 
@@ -132,13 +132,13 @@ def load_weather_data(storage: Storage, location: str) -> pd.DataFrame:
 
 def load_energy_data(storage: Storage, location: str) -> pd.DataFrame:
     """Load energy data into DataFrame."""
-    query = f"""
+    query = """
         SELECT timestamp, demand_mwh, temperature_c, is_weekend, hour_of_day, location
         FROM energy
-        WHERE location = '{location}'
+        WHERE location = ?
         ORDER BY timestamp
     """
-    result = storage.execute_query(query)
+    result = storage.execute_query(query, [location])
     if not result:
         return pd.DataFrame()
 
