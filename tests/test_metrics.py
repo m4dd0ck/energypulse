@@ -54,41 +54,31 @@ def sample_energy() -> list[EnergyRecord]:
 
 
 class TestMetricsEngine:
-    def test_total_demand(
-        self, engine: MetricsEngine, sample_energy: list[EnergyRecord]
-    ) -> None:
+    def test_total_demand(self, engine: MetricsEngine, sample_energy: list[EnergyRecord]) -> None:
         result = engine.total_demand(sample_energy, {})
         assert result.metric_name == "total_demand"
         assert result.unit == "MWh"
         assert result.value > 0
 
-    def test_peak_demand(
-        self, engine: MetricsEngine, sample_energy: list[EnergyRecord]
-    ) -> None:
+    def test_peak_demand(self, engine: MetricsEngine, sample_energy: list[EnergyRecord]) -> None:
         result = engine.peak_demand(sample_energy, {})
         assert result.metric_name == "peak_demand"
         # Peak should be during peak hours: 5000 * 1.3 = 6500
         assert result.value == 6500.0
 
-    def test_average_demand(
-        self, engine: MetricsEngine, sample_energy: list[EnergyRecord]
-    ) -> None:
+    def test_average_demand(self, engine: MetricsEngine, sample_energy: list[EnergyRecord]) -> None:
         result = engine.average_demand(sample_energy, {})
         assert result.metric_name == "average_demand"
         assert result.value > 0
 
-    def test_peak_hour_ratio(
-        self, engine: MetricsEngine, sample_energy: list[EnergyRecord]
-    ) -> None:
+    def test_peak_hour_ratio(self, engine: MetricsEngine, sample_energy: list[EnergyRecord]) -> None:
         result = engine.peak_hour_ratio(sample_energy, {})
         assert result.metric_name == "peak_hour_ratio"
         assert result.unit == "ratio"
         # Peak (6500) / avg should be > 1
         assert result.value > 1.0
 
-    def test_weekend_vs_weekday_ratio(
-        self, engine: MetricsEngine, sample_energy: list[EnergyRecord]
-    ) -> None:
+    def test_weekend_vs_weekday_ratio(self, engine: MetricsEngine, sample_energy: list[EnergyRecord]) -> None:
         result = engine.weekend_vs_weekday(sample_energy, {})
         assert result.metric_name == "weekend_weekday_ratio"
         # Weekend has 0.8 multiplier, so ratio should be around 0.8
@@ -98,9 +88,7 @@ class TestMetricsEngine:
         result = engine.total_demand([], {})
         assert result.value == 0
 
-    def test_compute_all(
-        self, engine: MetricsEngine, sample_energy: list[EnergyRecord]
-    ) -> None:
+    def test_compute_all(self, engine: MetricsEngine, sample_energy: list[EnergyRecord]) -> None:
         results = engine.compute_all(sample_energy, dimensions={"location": "test"})
         metric_names = {r.metric_name for r in results}
 

@@ -71,9 +71,7 @@ class QualityChecker:
             message=message,
         )
 
-    def _check_freshness(
-        self, records: Sequence[WeatherRecord], max_age_hours: int
-    ) -> QualityCheckResult:
+    def _check_freshness(self, records: Sequence[WeatherRecord], max_age_hours: int) -> QualityCheckResult:
         if not records:
             return QualityCheckResult(
                 check_name="weather_freshness",
@@ -103,9 +101,7 @@ class QualityChecker:
             message=message,
         )
 
-    def _check_temperature_range(
-        self, records: Sequence[WeatherRecord]
-    ) -> QualityCheckResult:
+    def _check_temperature_range(self, records: Sequence[WeatherRecord]) -> QualityCheckResult:
         if not records:
             return QualityCheckResult(
                 check_name="temperature_range",
@@ -135,9 +131,7 @@ class QualityChecker:
             message=message,
         )
 
-    def _check_uniqueness(
-        self, records: Sequence[WeatherRecord | EnergyRecord]
-    ) -> QualityCheckResult:
+    def _check_uniqueness(self, records: Sequence[WeatherRecord | EnergyRecord]) -> QualityCheckResult:
         if not records:
             return QualityCheckResult(
                 check_name="uniqueness",

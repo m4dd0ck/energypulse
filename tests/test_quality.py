@@ -49,9 +49,7 @@ def sample_energy() -> list[EnergyRecord]:
 
 
 class TestWeatherQualityChecks:
-    def test_completeness_pass(
-        self, checker: QualityChecker, sample_weather: list[WeatherRecord]
-    ) -> None:
+    def test_completeness_pass(self, checker: QualityChecker, sample_weather: list[WeatherRecord]) -> None:
         results = checker.check_weather(sample_weather)
         completeness = next(r for r in results if r.check_name == "weather_completeness")
         assert completeness.status == QualityStatus.PASS
@@ -73,9 +71,7 @@ class TestWeatherQualityChecks:
         completeness = next(r for r in results if r.check_name == "weather_completeness")
         assert completeness.status == QualityStatus.FAIL
 
-    def test_uniqueness_pass(
-        self, checker: QualityChecker, sample_weather: list[WeatherRecord]
-    ) -> None:
+    def test_uniqueness_pass(self, checker: QualityChecker, sample_weather: list[WeatherRecord]) -> None:
         results = checker.check_weather(sample_weather)
         uniqueness = next(r for r in results if r.check_name == "uniqueness")
         assert uniqueness.status == QualityStatus.PASS
@@ -101,23 +97,17 @@ class TestWeatherQualityChecks:
 
 
 class TestEnergyQualityChecks:
-    def test_completeness_pass(
-        self, checker: QualityChecker, sample_energy: list[EnergyRecord]
-    ) -> None:
+    def test_completeness_pass(self, checker: QualityChecker, sample_energy: list[EnergyRecord]) -> None:
         results = checker.check_energy(sample_energy)
         completeness = next(r for r in results if r.check_name == "energy_completeness")
         assert completeness.status == QualityStatus.PASS
 
-    def test_demand_range_pass(
-        self, checker: QualityChecker, sample_energy: list[EnergyRecord]
-    ) -> None:
+    def test_demand_range_pass(self, checker: QualityChecker, sample_energy: list[EnergyRecord]) -> None:
         results = checker.check_energy(sample_energy)
         demand_range = next(r for r in results if r.check_name == "demand_range")
         assert demand_range.status == QualityStatus.PASS
 
-    def test_demand_consistency_pass(
-        self, checker: QualityChecker, sample_energy: list[EnergyRecord]
-    ) -> None:
+    def test_demand_consistency_pass(self, checker: QualityChecker, sample_energy: list[EnergyRecord]) -> None:
         results = checker.check_energy(sample_energy)
         consistency = next(r for r in results if r.check_name == "demand_consistency")
         assert consistency.status == QualityStatus.PASS

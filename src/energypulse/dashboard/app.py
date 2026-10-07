@@ -116,8 +116,15 @@ def load_weather_data(storage: Storage, location: str) -> pd.DataFrame:
 
     df = pd.DataFrame(
         result,
-        columns=["timestamp", "temperature_c", "humidity_pct", "wind_speed_kmh",
-                 "precipitation_mm", "cloud_cover_pct", "location"]
+        columns=[
+            "timestamp",
+            "temperature_c",
+            "humidity_pct",
+            "wind_speed_kmh",
+            "precipitation_mm",
+            "cloud_cover_pct",
+            "location",
+        ],
     )
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     return df
@@ -136,8 +143,7 @@ def load_energy_data(storage: Storage, location: str) -> pd.DataFrame:
         return pd.DataFrame()
 
     df = pd.DataFrame(
-        result,
-        columns=["timestamp", "demand_mwh", "temperature_c", "is_weekend", "hour_of_day", "location"]
+        result, columns=["timestamp", "demand_mwh", "temperature_c", "is_weekend", "hour_of_day", "location"]
     )
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     df["date"] = df["timestamp"].dt.date
@@ -270,8 +276,11 @@ def display_quality_checks(storage: Storage) -> None:
         check_df = pd.DataFrame(results, columns=["Check", "Status", "Message", "Checked At"])
 
         def style_status(val: str) -> str:
-            colors = {"pass": "background-color: #90EE90", "warn": "background-color: #FFD700",
-                      "fail": "background-color: #FF6B6B"}
+            colors = {
+                "pass": "background-color: #90EE90",
+                "warn": "background-color: #FFD700",
+                "fail": "background-color: #FF6B6B",
+            }
             return colors.get(val, "")
 
         styled = check_df.style.applymap(style_status, subset=["Status"])

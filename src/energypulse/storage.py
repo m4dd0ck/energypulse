@@ -174,9 +174,7 @@ class Storage:
         log.info("metrics_saved", count=len(results))
         return len(results)
 
-    def get_weather(
-        self, location: str | None = None, limit: int = 1000
-    ) -> list[WeatherRecord]:
+    def get_weather(self, location: str | None = None, limit: int = 1000) -> list[WeatherRecord]:
         query = "SELECT * FROM weather"
         params = []
         if location:
@@ -198,9 +196,7 @@ class Storage:
             for row in result
         ]
 
-    def get_energy(
-        self, location: str | None = None, limit: int = 1000
-    ) -> list[EnergyRecord]:
+    def get_energy(self, location: str | None = None, limit: int = 1000) -> list[EnergyRecord]:
         query = "SELECT * FROM energy"
         params = []
         if location:
