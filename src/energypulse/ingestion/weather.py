@@ -65,9 +65,7 @@ class WeatherClient:
             records = self._fetch_in_chunks(coords, location, start_date, end_date)
         else:
             # Forecast endpoint for recent data
-            records = self._fetch_single(
-                OPEN_METEO_FORECAST_URL, coords, location, start_date, end_date
-            )
+            records = self._fetch_single(OPEN_METEO_FORECAST_URL, coords, location, start_date, end_date)
 
         log.info("weather_fetched", location=location, record_count=len(records))
         return records
@@ -117,9 +115,7 @@ class WeatherClient:
                 chunk_end=current_end.date(),
             )
 
-            records = self._fetch_single(
-                OPEN_METEO_ARCHIVE_URL, coords, location, current_start, current_end
-            )
+            records = self._fetch_single(OPEN_METEO_ARCHIVE_URL, coords, location, current_start, current_end)
             all_records.extend(records)
             current_start = current_end + timedelta(days=1)
 

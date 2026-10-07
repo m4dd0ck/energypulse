@@ -49,9 +49,7 @@ class MetricsEngine:
         log.info("metrics_computed", count=len(results), dimensions=dims)
         return results
 
-    def total_demand(
-        self, records: Sequence[EnergyRecord], dims: dict[str, str]
-    ) -> MetricResult:
+    def total_demand(self, records: Sequence[EnergyRecord], dims: dict[str, str]) -> MetricResult:
         total = sum(r.demand_mwh for r in records)
         return MetricResult(
             metric_name="total_demand",
@@ -60,13 +58,9 @@ class MetricsEngine:
             dimensions=dims,
         )
 
-    def peak_demand(
-        self, records: Sequence[EnergyRecord], dims: dict[str, str]
-    ) -> MetricResult:
+    def peak_demand(self, records: Sequence[EnergyRecord], dims: dict[str, str]) -> MetricResult:
         if not records:
-            return MetricResult(
-                metric_name="peak_demand", value=0, unit="MWh", dimensions=dims
-            )
+            return MetricResult(metric_name="peak_demand", value=0, unit="MWh", dimensions=dims)
         peak = max(r.demand_mwh for r in records)
         return MetricResult(
             metric_name="peak_demand",
@@ -75,13 +69,9 @@ class MetricsEngine:
             dimensions=dims,
         )
 
-    def average_demand(
-        self, records: Sequence[EnergyRecord], dims: dict[str, str]
-    ) -> MetricResult:
+    def average_demand(self, records: Sequence[EnergyRecord], dims: dict[str, str]) -> MetricResult:
         if not records:
-            return MetricResult(
-                metric_name="average_demand", value=0, unit="MWh", dimensions=dims
-            )
+            return MetricResult(metric_name="average_demand", value=0, unit="MWh", dimensions=dims)
         avg = sum(r.demand_mwh for r in records) / len(records)
         return MetricResult(
             metric_name="average_demand",
@@ -90,18 +80,14 @@ class MetricsEngine:
             dimensions=dims,
         )
 
-    def peak_hour_ratio(
-        self, records: Sequence[EnergyRecord], dims: dict[str, str]
-    ) -> MetricResult:
+    def peak_hour_ratio(self, records: Sequence[EnergyRecord], dims: dict[str, str]) -> MetricResult:
         """Ratio of peak demand to average demand.
 
         Higher ratio indicates more variable demand (spikier load profile).
         Values > 1.5 suggest need for demand response programs.
         """
         if not records:
-            return MetricResult(
-                metric_name="peak_hour_ratio", value=0, unit="ratio", dimensions=dims
-            )
+            return MetricResult(metric_name="peak_hour_ratio", value=0, unit="ratio", dimensions=dims)
 
         peak = max(r.demand_mwh for r in records)
         avg = sum(r.demand_mwh for r in records) / len(records)
@@ -114,9 +100,7 @@ class MetricsEngine:
             dimensions=dims,
         )
 
-    def weekend_vs_weekday(
-        self, records: Sequence[EnergyRecord], dims: dict[str, str]
-    ) -> MetricResult:
+    def weekend_vs_weekday(self, records: Sequence[EnergyRecord], dims: dict[str, str]) -> MetricResult:
         """Ratio of weekend to weekday average demand.
 
         Values < 1 indicate lower weekend demand (typical for commercial areas).
@@ -144,9 +128,7 @@ class MetricsEngine:
             dimensions=dims,
         )
 
-    def peak_hour_demand(
-        self, records: Sequence[EnergyRecord], dims: dict[str, str]
-    ) -> MetricResult:
+    def peak_hour_demand(self, records: Sequence[EnergyRecord], dims: dict[str, str]) -> MetricResult:
         """Average demand during peak hours (5-8 PM)."""
         peak_hours = [r for r in records if 17 <= r.hour_of_day <= 20]
 
@@ -166,9 +148,7 @@ class MetricsEngine:
             dimensions=dims,
         )
 
-    def overnight_minimum(
-        self, records: Sequence[EnergyRecord], dims: dict[str, str]
-    ) -> MetricResult:
+    def overnight_minimum(self, records: Sequence[EnergyRecord], dims: dict[str, str]) -> MetricResult:
         """Average demand during overnight hours (12-5 AM).
 
         Represents base load - the minimum demand that's always required.
@@ -204,9 +184,7 @@ class MetricsEngine:
         Values near 0: minimal temperature sensitivity
         """
         # Match records by timestamp and location
-        weather_lookup = {
-            (w.timestamp, w.location): w.temperature_c for w in weather_records
-        }
+        weather_lookup = {(w.timestamp, w.location): w.temperature_c for w in weather_records}
 
         temps = []
         demands = []

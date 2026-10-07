@@ -54,9 +54,7 @@ class TestEnergySimulator:
         energy = simulator.simulate_from_weather(weather_records)
         assert len(energy) == len(weather_records)
 
-    def test_demand_is_positive(
-        self, simulator: EnergySimulator, weather_records: list[WeatherRecord]
-    ) -> None:
+    def test_demand_is_positive(self, simulator: EnergySimulator, weather_records: list[WeatherRecord]) -> None:
         energy = simulator.simulate_from_weather(weather_records)
         for record in energy:
             assert record.demand_mwh > 0
@@ -70,18 +68,14 @@ class TestEnergySimulator:
         peak_demand = energy[1].demand_mwh
         assert peak_demand > noon_demand
 
-    def test_weekend_has_lower_demand(
-        self, simulator: EnergySimulator, weather_records: list[WeatherRecord]
-    ) -> None:
+    def test_weekend_has_lower_demand(self, simulator: EnergySimulator, weather_records: list[WeatherRecord]) -> None:
         energy = simulator.simulate_from_weather(weather_records)
         # Index 0 is Monday, index 2 is Saturday (same hour, same temp)
         weekday_demand = energy[0].demand_mwh
         weekend_demand = energy[2].demand_mwh
         assert weekend_demand < weekday_demand
 
-    def test_seed_produces_reproducible_results(
-        self, weather_records: list[WeatherRecord]
-    ) -> None:
+    def test_seed_produces_reproducible_results(self, weather_records: list[WeatherRecord]) -> None:
         sim1 = EnergySimulator(seed=123)
         sim2 = EnergySimulator(seed=123)
 
