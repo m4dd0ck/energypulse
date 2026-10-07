@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 import httpx
 import structlog
+from pydantic import BaseModel
 
 from energypulse.models import WeatherRecord
 
@@ -15,21 +16,34 @@ OPEN_METEO_FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 # Archive endpoint: historical data going back years (free, no key needed)
 OPEN_METEO_ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 
-# Major US cities for demo
+
+class Location(BaseModel, frozen=True):
+    """Coordinates and IANA timezone of a supported city."""
+
+    lat: float
+    lon: float
+    timezone: str
+
+
+# Major US cities for demo. Each city is queried in its own timezone so the
+# returned hourly timestamps are local wall-clock time; otherwise hour-of-day
+# patterns (morning ramp, evening peak) would be shifted for every city but
+# New York.
 LOCATIONS = {
-    "new_york": {"lat": 40.7128, "lon": -74.0060},
-    "los_angeles": {"lat": 34.0522, "lon": -118.2437},
-    "chicago": {"lat": 41.8781, "lon": -87.6298},
-    "houston": {"lat": 29.7604, "lon": -95.3698},
-    "phoenix": {"lat": 33.4484, "lon": -112.0740},
+    "new_york": Location(lat=40.7128, lon=-74.0060, timezone="America/New_York"),
+    "los_angeles": Location(lat=34.0522, lon=-118.2437, timezone="America/Los_Angeles"),
+    "chicago": Location(lat=41.8781, lon=-87.6298, timezone="America/Chicago"),
+    "houston": Location(lat=29.7604, lon=-95.3698, timezone="America/Chicago"),
+    "phoenix": Location(lat=33.4484, lon=-112.0740, timezone="America/Phoenix"),
 }
 
 
 class WeatherClient:
     """Client for fetching weather data from Open-Meteo API."""
 
-    def __init__(self, timeout: float = 30.0) -> None:
-        self._client = httpx.Client(timeout=timeout)  # 30s is generous but the API can be slow
+    def __init__(self, timeout: float = 30.0, transport: httpx.BaseTransport | None = None) -> None:
+        # 30s is generous but the API can be slow. `transport` lets tests swap in httpx.MockTransport.
+        self._client = httpx.Client(timeout=timeout, transport=transport)
 
     def fetch_historical(
         self,
@@ -53,8 +67,14 @@ class WeatherClient:
         if location not in LOCATIONS:
             raise ValueError(f"Unknown location: {location}. Valid: {list(LOCATIONS.keys())}")
 
-        coords = LOCATIONS[location]
-        log.info("fetching_weather", location=location, start=start_date.date(), end=end_date.date())
+        loc = LOCATIONS[location]
+        log.info(
+            "fetching_weather",
+            location=location,
+            timezone=loc.timezone,
+            start=start_date.date(),
+            end=end_date.date(),
+        )
 
         # Determine which endpoint to use based on how far back we're going
         days_back = (datetime.now() - start_date).days
@@ -62,10 +82,10 @@ class WeatherClient:
 
         if use_archive:
             # Archive API works best in chunks of ~30 days for large ranges
-            records = self._fetch_in_chunks(coords, location, start_date, end_date)
+            records = self._fetch_in_chunks(loc, location, start_date, end_date)
         else:
             # Forecast endpoint for recent data
-            records = self._fetch_single(OPEN_METEO_FORECAST_URL, coords, location, start_date, end_date)
+            records = self._fetch_single(OPEN_METEO_FORECAST_URL, loc, location, start_date, end_date)
 
         log.info("weather_fetched", location=location, record_count=len(records))
         return records
@@ -73,19 +93,19 @@ class WeatherClient:
     def _fetch_single(
         self,
         url: str,
-        coords: dict[str, float],
+        loc: Location,
         location: str,
         start_date: datetime,
         end_date: datetime,
     ) -> list[WeatherRecord]:
         """Fetch weather data from a single API call."""
         params: dict[str, str | float] = {
-            "latitude": coords["lat"],
-            "longitude": coords["lon"],
+            "latitude": loc.lat,
+            "longitude": loc.lon,
             "hourly": "temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,cloud_cover",
             "start_date": start_date.strftime("%Y-%m-%d"),
             "end_date": end_date.strftime("%Y-%m-%d"),
-            "timezone": "America/New_York",
+            "timezone": loc.timezone,
         }
 
         response = self._client.get(url, params=params)
@@ -96,7 +116,7 @@ class WeatherClient:
 
     def _fetch_in_chunks(
         self,
-        coords: dict[str, float],
+        loc: Location,
         location: str,
         start_date: datetime,
         end_date: datetime,
@@ -115,7 +135,7 @@ class WeatherClient:
                 chunk_end=current_end.date(),
             )
 
-            records = self._fetch_single(OPEN_METEO_ARCHIVE_URL, coords, location, current_start, current_end)
+            records = self._fetch_single(OPEN_METEO_ARCHIVE_URL, loc, location, current_start, current_end)
             all_records.extend(records)
             current_start = current_end + timedelta(days=1)
 
@@ -150,11 +170,12 @@ class WeatherClient:
         if location not in LOCATIONS:
             raise ValueError(f"Unknown location: {location}")
 
-        coords = LOCATIONS[location]
+        loc = LOCATIONS[location]
         params: dict[str, str | float] = {
-            "latitude": coords["lat"],
-            "longitude": coords["lon"],
+            "latitude": loc.lat,
+            "longitude": loc.lon,
             "current": "temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,cloud_cover",
+            "timezone": loc.timezone,
         }
 
         response = self._client.get(OPEN_METEO_FORECAST_URL, params=params)
