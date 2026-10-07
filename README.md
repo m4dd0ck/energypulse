@@ -54,6 +54,9 @@ uv run energypulse ingest --location chicago --days 14
 
 **Locations available**: new_york, los_angeles, chicago, houston, phoenix
 
+Each city is queried in its own timezone, so timestamps are local wall-clock time and
+hour-of-day patterns line up across cities.
+
 The energy simulator models realistic demand patterns:
 - Temperature-driven HVAC load (heating in cold, cooling in heat)
 - Time-of-day patterns (morning ramp, evening peak, overnight valley)
@@ -67,15 +70,17 @@ Runs automated data quality validation:
 uv run energypulse quality
 ```
 
-**Checks performed**:
+**Checks performed** (9 total, 5 on weather and 4 on energy):
 | Check | Description |
 |-------|-------------|
-| `completeness` | Minimum record count threshold |
-| `freshness` | Most recent data within 48 hours |
+| `weather_completeness` | At least 24 weather records |
+| `weather_freshness` | Most recent weather data within 48 hours |
 | `temperature_range` | Values within -40°C to 50°C |
-| `uniqueness` | No duplicate timestamp+location pairs |
-| `no_gaps` | No missing hours in time series |
-| `demand_range` | Energy demand within realistic bounds |
+| `weather_uniqueness` | No duplicate timestamp+location pairs in weather |
+| `no_gaps` | No missing hours in the weather time series |
+| `energy_completeness` | At least 24 energy records |
+| `demand_range` | Energy demand within 500-15,000 MWh |
+| `energy_uniqueness` | No duplicate timestamp+location pairs in energy |
 | `demand_consistency` | No >50% hour-to-hour spikes |
 
 ### 3. Semantic Metrics
@@ -115,37 +120,44 @@ uv run streamlit run src/energypulse/dashboard/app.py
 ## Sample Output
 
 ### CLI Quality Checks
-```
-┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Check                 ┃ Status ┃ Message                              ┃
-┡━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ weather_completeness  │ PASS   │ Found 168 weather records            │
-│ weather_freshness     │ PASS   │ Latest data is 2.3 hours old         │
-│ temperature_range     │ PASS   │ All 168 temperatures within range    │
-│ uniqueness            │ PASS   │ All 168 records are unique           │
-│ no_gaps               │ PASS   │ No gaps detected in hourly data      │
-│ energy_completeness   │ PASS   │ Found 168 energy records             │
-│ demand_range          │ PASS   │ All 168 demand values within range   │
-│ demand_consistency    │ PASS   │ Demand changes are consistent        │
-└───────────────────────┴────────┴──────────────────────────────────────┘
 
-8/8 checks passed
+From `uv run energypulse run --location new_york --days 7` on 2026-10-07:
+
 ```
+┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Check                ┃ Status ┃ Message                                             ┃
+┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ weather_completeness │ PASS   │ Found 192 weather records (threshold: 24)           │
+│ weather_freshness    │ PASS   │ Latest data is -7.3 hours old                       │
+│ temperature_range    │ PASS   │ All 192 temperatures within range [-40, 50]°C       │
+│ weather_uniqueness   │ PASS   │ All 192 records are unique by timestamp+location    │
+│ no_gaps              │ PASS   │ No gaps detected in hourly data                     │
+│ energy_completeness  │ PASS   │ Found 192 energy records (threshold: 24)            │
+│ demand_range         │ PASS   │ All 192 demand values within range [500, 15000] MWh │
+│ energy_uniqueness    │ PASS   │ All 192 records are unique by timestamp+location    │
+│ demand_consistency   │ WARN   │ Found 4 unusual demand changes (>50% hour-to-hour)  │
+└──────────────────────┴────────┴─────────────────────────────────────────────────────┘
+
+8/9 checks passed
+```
+
+The forecast endpoint returns the rest of today's hours too, which is why the record
+count is 192 (8 days) and the freshness age is negative.
 
 ### CLI Metrics Output
 ```
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┓
-┃ Metric                    ┃        Value ┃ Unit        ┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━┩
-│ total_demand              │   847,234.56 │ MWh         │
-│ peak_demand               │     7,842.31 │ MWh         │
-│ average_demand            │     5,043.06 │ MWh         │
-│ peak_hour_ratio           │         1.56 │ ratio       │
-│ weekend_weekday_ratio     │         0.78 │ ratio       │
-│ peak_hour_demand          │     6,521.44 │ MWh         │
-│ overnight_minimum         │     3,542.18 │ MWh         │
-│ temperature_sensitivity   │         0.42 │ correlation │
-└───────────────────────────┴──────────────┴─────────────┘
+┏━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━┓
+┃ Metric                  ┃      Value ┃ Unit        ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━┩
+│ total_demand            │ 930,160.62 │ MWh         │
+│ peak_demand             │   7,684.76 │ MWh         │
+│ average_demand          │   4,844.59 │ MWh         │
+│ peak_hour_ratio         │       1.59 │ ratio       │
+│ weekend_weekday_ratio   │       0.74 │ ratio       │
+│ peak_hour_demand        │   6,464.36 │ MWh         │
+│ overnight_minimum       │   3,383.91 │ MWh         │
+│ temperature_sensitivity │       0.16 │ correlation │
+└─────────────────────────┴────────────┴─────────────┘
 ```
 
 ## Tech Stack
@@ -183,7 +195,12 @@ energypulse/
 
 ## Running Tests
 
+pytest, ruff and mypy live in the `dev` extra, which plain `uv sync` does not install.
+
 ```bash
+# Install runtime deps plus the dev extra
+uv sync --all-extras
+
 # Run all tests
 uv run pytest
 
