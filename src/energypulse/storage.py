@@ -176,11 +176,12 @@ class Storage:
 
     def get_weather(self, location: str | None = None, limit: int = 1000) -> list[WeatherRecord]:
         query = "SELECT * FROM weather"
-        params = []
+        params: list[object] = []
         if location:
             query += " WHERE location = ?"
             params.append(location)
-        query += f" ORDER BY timestamp DESC LIMIT {limit}"
+        query += " ORDER BY timestamp DESC LIMIT ?"
+        params.append(limit)
 
         result = self._con.execute(query, params).fetchall()
         return [
@@ -198,11 +199,12 @@ class Storage:
 
     def get_energy(self, location: str | None = None, limit: int = 1000) -> list[EnergyRecord]:
         query = "SELECT * FROM energy"
-        params = []
+        params: list[object] = []
         if location:
             query += " WHERE location = ?"
             params.append(location)
-        query += f" ORDER BY timestamp DESC LIMIT {limit}"
+        query += " ORDER BY timestamp DESC LIMIT ?"
+        params.append(limit)
 
         result = self._con.execute(query, params).fetchall()
         return [
@@ -252,8 +254,9 @@ class Storage:
 
         return {row[0]: row[1] for row in result}
 
-    def execute_query(self, query: str) -> list[tuple[object, ...]]:
-        return self._con.execute(query).fetchall()
+    def execute_query(self, query: str, params: Sequence[object] | None = None) -> list[tuple[object, ...]]:
+        """Run a read query with optional bound parameters (``?`` placeholders)."""
+        return self._con.execute(query, list(params or [])).fetchall()
 
     def close(self) -> None:
         self._con.close()
