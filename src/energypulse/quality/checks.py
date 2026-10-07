@@ -25,7 +25,7 @@ class QualityChecker:
         results.append(self._check_completeness(records, "weather"))
         results.append(self._check_freshness(records, max_age_hours=48))
         results.append(self._check_temperature_range(records))
-        results.append(self._check_uniqueness(records))
+        results.append(self._check_uniqueness(records, "weather"))
         results.append(self._check_no_gaps(records))
 
         passed = sum(1 for r in results if r.status == QualityStatus.PASS)
@@ -39,7 +39,7 @@ class QualityChecker:
 
         results.append(self._check_completeness(records, "energy"))
         results.append(self._check_demand_range(records))
-        results.append(self._check_uniqueness(records))
+        results.append(self._check_uniqueness(records, "energy"))
         results.append(self._check_demand_consistency(records))
 
         passed = sum(1 for r in results if r.status == QualityStatus.PASS)
@@ -131,10 +131,13 @@ class QualityChecker:
             message=message,
         )
 
-    def _check_uniqueness(self, records: Sequence[WeatherRecord | EnergyRecord]) -> QualityCheckResult:
+    def _check_uniqueness(self, records: Sequence[WeatherRecord | EnergyRecord], data_type: str) -> QualityCheckResult:
+        # Reason: results are keyed by check_name downstream, so the weather and
+        # energy runs of this check need distinct names or one overwrites the other.
+        check_name = f"{data_type}_uniqueness"
         if not records:
             return QualityCheckResult(
-                check_name="uniqueness",
+                check_name=check_name,
                 status=QualityStatus.FAIL,
                 message="No records to check",
             )
@@ -156,7 +159,7 @@ class QualityChecker:
             message = f"Found {duplicates} duplicate records ({pct:.1f}%)"
 
         return QualityCheckResult(
-            check_name="uniqueness",
+            check_name=check_name,
             status=status,
             metric_value=duplicates,
             threshold=0,
