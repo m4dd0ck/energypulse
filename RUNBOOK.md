@@ -36,8 +36,6 @@ deleting `data/` is safe.
 
 ## Release
 
-Follows `~/developer/hq/CONVENTIONS.md` §Versioning.
-
 1. Bump `version` in `pyproject.toml` and `__version__` in `src/energypulse/__init__.py`,
    then `uv lock` (CI installs with `--locked`).
 2. Commit `chore: Release vX.Y.Z`, tag `git tag -a vX.Y.Z`, push `main` and the tag.
@@ -58,5 +56,4 @@ Not deployed. The dashboard runs locally over the local database; there is no ho
 uv run ruff check . && uv run ruff format --check . && uv run mypy src/
 uv run pytest
 uv run energypulse status
-python3 ~/.claude/scripts/doc-check.py --repo .
 ```
